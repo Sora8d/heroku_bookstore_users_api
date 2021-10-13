@@ -31,7 +31,8 @@ func Create(c *gin.Context) {
 	//First way
 	bytes, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		//TODO: Handle error
+		restErr := rest_errors.NewBadRequestErr("invalid json body")
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
 	if err := json.Unmarshal(bytes, &user); err != nil {
@@ -39,8 +40,6 @@ func Create(c *gin.Context) {
 		c.JSON(restErr.Status(), restErr)
 		return
 	}
-	/*We can also use c.ShouldBindJSON(&user), that replaces everythin from
-	Readall() to Unmarshal()*/
 
 	result, saveErr := services.UsersService.CreateUser(user)
 	if saveErr != nil {

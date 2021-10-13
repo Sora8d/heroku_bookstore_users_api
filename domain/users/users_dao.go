@@ -5,68 +5,50 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Sora8d/bookstore_utils-go/logger"
-	"github.com/Sora8d/heroku_bookstore_users_api/datasources/mysql/users_db"
+	"github.com/Sora8d/heroku_bookstore_users_api/datasources/postgresql/users_db"
 	"github.com/Sora8d/heroku_bookstore_users_api/utils/date"
-	"github.com/Sora8d/heroku_bookstore_users_api/utils/mysql_utils"
 
+	"github.com/Sora8d/bookstore_utils-go/logger"
 	"github.com/Sora8d/bookstore_utils-go/rest_errors"
 )
 
 const (
-	errorNoRows                 = "no rows in result set"
-	queryInsertUser             = "INSERT INTO users (first_name, last_name, email, date_created, status, password) VALUES(?, ?, ?, ?, ?, ?);"
-	queryGetUser                = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE id = ?;"
-	queryUpdateUser             = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id=?;"
-	queryDeleteUser             = "DELETE FROM users WHERE id=?;"
-	queryFindUserByStatus       = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status=?;"
-	queryFindByEmailAndPassword = "SELECT id, first_name, last_name, email, date_Created, status FROM users WHERE email=? AND password=?;"
+	erroruniqueconstraint       = "users_email_key"
+	queryInsertUser             = "INSERT INTO users (first_name, last_name, email, status, date_created, password) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;"
+	queryGetUser                = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE id = $1;"
+	queryUpdateUser             = "UPDATE users SET first_name=$1, last_name=$2, email=$3 WHERE id=$4;"
+	queryDeleteUser             = "DELETE FROM users WHERE id=$1;"
+	queryFindUserByStatus       = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE status=$1;"
+	queryFindByEmailAndPassword = "SELECT id, first_name, last_name, email, status, date_Created FROM users WHERE email=$1 AND password=$2;"
 )
 
 var usersDB = users_db.Client
 
 func (user *User) Get() rest_errors.RestErr {
-	if err := usersDB.Ping(); err != nil {
-		panic(err)
-	}
-	stmt, err := usersDB.Prepare(queryGetUser)
-	if err != nil {
-		//This logger we should do with everywhere we have an error
-		logger.Error("error when trying to prepare get user statement", err)
-		resterr := rest_errors.NewInternalServerError("error trying to get user", errors.New("database error"))
-		return resterr
-	}
-	defer stmt.Close()
-
-	result := stmt.QueryRow(user.Id)
+	result := usersDB.Get(queryGetUser, user.Id)
 	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated); err != nil {
-		return mysql_utils.ParseError(err)
+		return rest_errors.NewNotFoundError("No matching ids")
 	}
 	return nil
 }
 
 func (user *User) FindByEmailAndPassword() rest_errors.RestErr {
-	if err := usersDB.Ping(); err != nil {
-		panic(err)
-	}
-	stmt, err := usersDB.Prepare(queryFindByEmailAndPassword)
+	result, err := usersDB.Query(queryFindByEmailAndPassword, user.Email, user.Password)
 	if err != nil {
-		//This logger we should do with everywhere we have an error
-		logger.Error("error when trying to prepare get user statement", err)
-		resterr := rest_errors.NewInternalServerError("Error trying to validate credentials", errors.New("database error"))
-		return resterr
+		//TODO do stuff
+		logger.Error("Error in FindByEmailAndPassword function, ", err)
+		return rest_errors.NewInternalServerError("There was an unexpected error in the login process", errors.New("database error"))
 	}
-	defer stmt.Close()
-
-	result := stmt.QueryRow(user.Email, user.Password)
+	defer result.Close()
+	if !result.Next() {
+		return rest_errors.NewBadRequestErr("Incorrect user credentials")
+	}
 	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated); err != nil {
-		if strings.Contains(err.Error(), errorNoRows) {
-			resterr := rest_errors.NewBadRequestErr("Incorrect user credentials")
-			return resterr
-		}
+		logger.Error("Error parsing login info in FindByEmailAndPassword function", err)
 		resterr := rest_errors.NewInternalServerError("Error trying to validate credentials", errors.New("database error"))
 		return resterr
 	}
+
 	return nil
 }
 
@@ -76,21 +58,17 @@ func (user *User) Get(userId int64) (*User, *errors.RestErr) {
 }
 */
 func (user *User) Save() rest_errors.RestErr {
-	stmt, err := usersDB.Prepare(queryInsertUser)
+	user.DateCreated = date.GetNowString()
+	row := usersDB.Insert(queryInsertUser, user.FirstName, user.LastName, user.Email, user.Status, user.DateCreated, user.Password)
+	var userId int64
+	err := row.Scan(&userId)
 	if err != nil {
+		//This is a placeholder of a postgres_utils that should parse errors accordingly
+		if strings.Contains(err.Error(), erroruniqueconstraint) {
+			return rest_errors.NewBadRequestErr("email given is invalid")
+		}
 		resterr := rest_errors.NewInternalServerError("Error validating user", errors.New("database error"))
 		return resterr
-	}
-	defer stmt.Close()
-	user.DateCreated = date.GetNowString()
-	inserResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Status, user.Password)
-	if saveErr != nil {
-		return mysql_utils.ParseError(saveErr)
-	}
-
-	userId, err := inserResult.LastInsertId()
-	if err != nil {
-		return mysql_utils.ParseError(err)
 	}
 	user.Id = userId
 
@@ -98,54 +76,37 @@ func (user *User) Save() rest_errors.RestErr {
 }
 
 func (user *User) Update() rest_errors.RestErr {
-	stmt, err := usersDB.Prepare(queryUpdateUser)
+	err := usersDB.Execute(queryUpdateUser, user.FirstName, user.LastName, user.Email, user.Id)
 	if err != nil {
 		resterr := rest_errors.NewInternalServerError("Error updating user info", errors.New("database error"))
 		return resterr
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(user.FirstName, user.LastName, user.Email, user.Id)
-	if err != nil {
-		return mysql_utils.ParseError(err)
 	}
 	return nil
 }
 
 func (user *User) Delete() rest_errors.RestErr {
-	stmt, err := usersDB.Prepare(queryDeleteUser)
+	err := usersDB.Execute(queryDeleteUser, user.Id)
 	if err != nil {
-		resterr := rest_errors.NewInternalServerError("Error updating user info", errors.New("database error"))
-		return resterr
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(user.Id)
-	if err != nil {
-		return mysql_utils.ParseError(err)
+		return rest_errors.NewBadRequestErr("There was an error using method delete with given id")
 	}
 	return nil
 }
 
 func (user *User) FindByStatus(status string) (Users, rest_errors.RestErr) {
-	stmt, err := usersDB.Prepare(queryFindUserByStatus)
+	rows, err := usersDB.Query(queryFindUserByStatus, status)
 	if err != nil {
-		resterr := rest_errors.NewInternalServerError("Error finding user", errors.New("database error"))
-		return nil, resterr
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query(status)
-	if err != nil {
-		resterr := rest_errors.NewInternalServerError("Error finding user", errors.New("database error"))
-		return nil, resterr
+		//TODO do stuff
+		logger.Error("Error in FindByStatus function", err)
+		return nil, rest_errors.NewInternalServerError("There was an error getting the search results", errors.New("database error"))
 	}
 	defer rows.Close()
+
 	results := make(Users, 0)
 	for rows.Next() {
 		var current User
 		if err := rows.Scan(&current.Id, &current.FirstName, &current.LastName, &current.Email, &current.DateCreated, &current.Status); err != nil {
-			return nil, mysql_utils.ParseError(err)
+			logger.Error("Error parsing scans of the function FindByStatus", err)
+			return nil, rest_errors.NewInternalServerError("There was an error in one of the results", errors.New("database error"))
 		}
 		results = append(results, current)
 	}

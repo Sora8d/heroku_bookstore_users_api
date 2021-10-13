@@ -6,8 +6,8 @@ require (
 	github.com/Sora8d/bookstore_oauth-go v0.0.0-20211008182225-0196c400b503
 	github.com/Sora8d/bookstore_utils-go v0.0.0-20211008143022-f1f62a23ac8a
 	github.com/gin-gonic/gin v1.7.4
-	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx/v4 v4.13.0
+	github.com/joho/godotenv v1.4.0
 )
 
 require (

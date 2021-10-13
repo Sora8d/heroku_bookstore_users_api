@@ -6,36 +6,31 @@ import (
 	"os"
 
 	"github.com/Sora8d/bookstore_utils-go/logger"
+	"github.com/joho/godotenv"
 
 	pgx "github.com/jackc/pgx/v4"
 )
 
+//env vars
+/*
 const (
 	postgres_users_username = "postgres_users_username"
 	postgres_users_password = "postgres_users_password"
 	postgres_users_host     = "postgres_users_host"
 	postgres_users_schema   = "postgres_users_schema"
-)
+)*/
+
+//statements
 
 var (
-	Client   postGresInterface
-	username = os.Getenv(postgres_users_username)
-	password = os.Getenv(postgres_users_password)
-	host     = os.Getenv(postgres_users_host)
-	schema   = os.Getenv(postgres_users_schema)
+	Client postGresInterface
 )
 
 type postGresInterface interface {
-	Get
-	FindByEmailAndPassword
-	FindByStatus
-	Delete
-	Update
-	Save
-}
-
-type postGresObject struct {
-	conn *pgx.Conn
+	Get(string, int64) pgx.Row
+	Query(string, ...interface{}) (pgx.Rows, error)
+	Execute(string, ...interface{}) error
+	Insert(string, ...interface{}) pgx.Row
 }
 
 /*
@@ -51,12 +46,16 @@ postgres://localhost/mydb?user=other&password=secret
 possible postgresql urls
 */
 func init() {
+	err := godotenv.Load("db_envs.env")
+	if err != nil {
+		logger.Error("Error loading environment variables", err)
+		panic(err)
+	}
 	//When im able to set environment variables on vscode ill update this
 	datasourceName := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s",
-		username,
-		password,
-		schema)
-	var err error
+		os.Getenv("postgres_users_username"),
+		os.Getenv("postgres_users_password"),
+		os.Getenv("postgres_users_schema"))
 	newConn, err := pgx.Connect(context.Background(), datasourceName)
 	if err != nil {
 		logger.Error("Fatal error initializing db", err)
@@ -68,4 +67,27 @@ func init() {
 	}
 	Client = &postGresObject{conn: newConn}
 	logger.Info("database succesfully configured")
+}
+
+type postGresObject struct {
+	conn *pgx.Conn
+}
+
+func (pgc postGresObject) Get(query string, id int64) pgx.Row {
+	row := pgc.conn.QueryRow(context.Background(), query, id)
+	return row
+}
+
+func (pgc postGresObject) Query(query string, args ...interface{}) (pgx.Rows, error) {
+	rows, err := pgc.conn.Query(context.Background(), query, args...)
+	return rows, err
+}
+func (pgc postGresObject) Execute(query string, args ...interface{}) error {
+	_, err := pgc.conn.Exec(context.Background(), query, args...)
+	return err
+}
+
+func (pgc postGresObject) Insert(query string, args ...interface{}) pgx.Row {
+	row := pgc.conn.QueryRow(context.Background(), query, args...)
+	return row
 }
