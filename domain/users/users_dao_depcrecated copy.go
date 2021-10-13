@@ -1,4 +1,4 @@
-package users
+
 
 import (
 	"errors"
@@ -6,11 +6,10 @@ import (
 	"strings"
 
 	"github.com/Sora8d/bookstore_utils-go/logger"
+	"github.com/Sora8d/bookstore_utils-go/rest_errors"
 	"github.com/Sora8d/heroku_bookstore_users_api/datasources/mysql/users_db"
 	"github.com/Sora8d/heroku_bookstore_users_api/utils/date"
 	"github.com/Sora8d/heroku_bookstore_users_api/utils/mysql_utils"
-
-	"github.com/Sora8d/bookstore_utils-go/rest_errors"
 )
 
 const (

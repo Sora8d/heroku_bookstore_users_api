@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/Sora8d/bookstore_utils-go/logger"
 	"github.com/gin-gonic/gin"
 )
 

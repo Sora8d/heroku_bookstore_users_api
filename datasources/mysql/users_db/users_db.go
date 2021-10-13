@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Sora8d/bookstore_utils-go/logger"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
