@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sora8d/heroku_bookstore_users_api/datasources/postgresql/users_db"
 	"github.com/Sora8d/heroku_bookstore_users_api/utils/date"
+	pgx "github.com/jackc/pgx/v4"
 
 	"github.com/Sora8d/bookstore_utils-go/logger"
 	"github.com/Sora8d/bookstore_utils-go/rest_errors"
@@ -27,7 +28,10 @@ var usersDB = users_db.Client
 func (user *User) Get() rest_errors.RestErr {
 	result := usersDB.Get(queryGetUser, user.Id)
 	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated); err != nil {
-		return rest_errors.NewNotFoundError("No matching ids")
+		if err == pgx.ErrNoRows {
+			return rest_errors.NewNotFoundError("No matching ids")
+		}
+		return rest_errors.NewBadRequestErr("There was an error with your request")
 	}
 	return nil
 }
