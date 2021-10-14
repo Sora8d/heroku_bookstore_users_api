@@ -3,10 +3,9 @@ package users_db
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/Sora8d/bookstore_utils-go/logger"
-	"github.com/joho/godotenv"
+	"github.com/Sora8d/heroku_bookstore_users_api/config"
 
 	pgx "github.com/jackc/pgx/v4"
 )
@@ -46,16 +45,10 @@ postgres://localhost/mydb?user=other&password=secret
 possible postgresql urls
 */
 func init() {
-	err := godotenv.Load("db_envs.env")
-	if err != nil {
-		logger.Error("Error loading environment variables", err)
-		panic(err)
-	}
-	//When im able to set environment variables on vscode ill update this
 	datasourceName := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s",
-		os.Getenv("postgres_users_username"),
-		os.Getenv("postgres_users_password"),
-		os.Getenv("postgres_users_schema"))
+		config.Config["users_postgres_username"],
+		config.Config["users_postgres_password"],
+		config.Config["users_postgres_schema"])
 	newConn, err := pgx.Connect(context.Background(), datasourceName)
 	if err != nil {
 		logger.Error("Fatal error initializing db", err)
