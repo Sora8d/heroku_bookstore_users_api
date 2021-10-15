@@ -16,6 +16,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	headerXClientId = "X-Client-Id"
+	headerXCallerId = "X-User-Id"
+	headerXAdmin    = "X-Admin"
+)
+
+func init() {
+	oauth.OauthRestClient.SetClient("http://127.0.0.1:8081")
+}
+
 func getUserId(Paramid string) (int64, rest_errors.RestErr) {
 	userId, userErr := strconv.ParseInt(Paramid, 10, 64)
 	if userErr != nil {
@@ -23,6 +33,13 @@ func getUserId(Paramid string) (int64, rest_errors.RestErr) {
 		return 0, err
 	}
 	return userId, nil
+}
+
+func checkPermits(request *http.Request, userId string) rest_errors.RestErr {
+	if !(request.Header.Get(headerXCallerId) == userId || request.Header.Get(headerXAdmin) == "true") {
+		return rest_errors.NewUnauthorizedError("Invalid credentials for this action.")
+	}
+	return nil
 }
 
 func Create(c *gin.Context) {
@@ -52,6 +69,7 @@ func Create(c *gin.Context) {
 func Get(c *gin.Context) {
 	if err := oauth.AuthenticateRequest(c.Request); err != nil {
 		c.JSON(err.Status(), err)
+		return
 	}
 
 	userId, idErr := getUserId(c.Param("user_id"))
@@ -95,7 +113,19 @@ func SearchUser(c *gin.Context) {
 }
 
 func Update(c *gin.Context) {
-	userId, idErr := getUserId(c.Param("user_id"))
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+
+	str_id := c.Param("user_id")
+
+	if err := checkPermits(c.Request, str_id); err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+
+	userId, idErr := getUserId(str_id)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
@@ -121,7 +151,19 @@ func Update(c *gin.Context) {
 }
 
 func Delete(c *gin.Context) {
-	userId, idErr := getUserId(c.Param("user_id"))
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+
+	str_id := c.Param("user_id")
+
+	if err := checkPermits(c.Request, str_id); err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+
+	userId, idErr := getUserId(str_id)
 	if idErr != nil {
 		c.JSON(idErr.Status(), idErr)
 		return
