@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Sora8d/heroku_bookstore_users_api/datasources/postgresql/users_db"
+	"github.com/Sora8d/heroku_bookstore_users_api/domain/queries"
 	"github.com/Sora8d/heroku_bookstore_users_api/utils/date"
 	pgx "github.com/jackc/pgx/v4"
 
@@ -16,11 +17,12 @@ import (
 const (
 	erroruniqueconstraint       = "users_email_key"
 	queryInsertUser             = "INSERT INTO users (first_name, last_name, email, status, date_created, password) VALUES($1, $2, $3, $4, $5, $6) RETURNING id;"
-	queryGetUser                = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE id = $1;"
+	queryGetUser                = "SELECT id, first_name, last_name, email, status, to_char(date_created, 'YYYY-MM-DD HH24:MI:SS TZ') FROM users WHERE id = $1;"
 	queryUpdateUser             = "UPDATE users SET first_name=$1, last_name=$2, email=$3 WHERE id=$4;"
 	queryDeleteUser             = "DELETE FROM users WHERE id=$1;"
-	queryFindUserByStatus       = "SELECT id, first_name, last_name, email, status, date_created FROM users WHERE status=$1;"
-	queryFindByEmailAndPassword = "SELECT id, first_name, last_name, email, status, date_Created FROM users WHERE email=$1 AND password=$2;"
+	queryFindUserByStatus       = "SELECT id, first_name, last_name, email, status, to_char(date_created, 'YYYY-MM-DD HH24:MI:SS TZ') FROM users WHERE status=$1;"
+	queryFindByEmailAndPassword = "SELECT id, first_name, last_name, email, status, to_char(date_created, 'YYYY-MM-DD HH24:MI:SS TZ') FROM users WHERE email=$1 AND password=$2;"
+	querySearchUser             = "SELECT id, first_name, last_name, email, status, to_char(date_created, 'YYYY-MM-DD HH24:MI:SS TZ') FROM users WHERE %s"
 )
 
 var usersDB = users_db.Client
@@ -119,4 +121,26 @@ func (user *User) FindByStatus(status string) (Users, rest_errors.RestErr) {
 		return nil, resterr
 	}
 	return results, nil
+}
+
+func (user *User) Search(query queries.PsQuery) ([]User, rest_errors.RestErr) {
+	var users []User
+	q, values := query.Build(querySearchUser)
+	rows, err := usersDB.Query(q, values...)
+	if err != nil {
+		return nil, rest_errors.NewInternalServerError("There was an  error building the query", errors.New("database error"))
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Status, &user.DateCreated); err != nil {
+			return nil, rest_errors.NewInternalServerError("There was an error obtaining one of the users", errors.New("database error"))
+		}
+		users = append(users, user)
+	}
+
+	if len(users) == 0 {
+		return nil, rest_errors.NewNotFoundError("no users with given criteria")
+	}
+	return users, nil
 }

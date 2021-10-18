@@ -16,3 +16,4 @@
 
 # environment variables
 *.env
+*_test.go

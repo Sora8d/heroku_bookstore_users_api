@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/Sora8d/bookstore_utils-go/crypto_utils"
+	"github.com/Sora8d/heroku_bookstore_users_api/domain/queries"
 	"github.com/Sora8d/heroku_bookstore_users_api/domain/users"
 
 	"github.com/Sora8d/bookstore_utils-go/rest_errors"
@@ -17,7 +18,7 @@ type usersServiceInterface interface {
 	CreateUser(users.User) (*users.User, rest_errors.RestErr)
 	UpdateUser(bool, users.User) (*users.User, rest_errors.RestErr)
 	DeleteUser(int64) rest_errors.RestErr
-	SearchUser(string) (users.Users, rest_errors.RestErr)
+	SearchUser(queries.PsQuery) ([]interface{}, rest_errors.RestErr)
 	LoginUser(users.LoginRequest) (interface{}, rest_errors.RestErr)
 }
 
@@ -75,9 +76,22 @@ func (s *usersService) DeleteUser(userId int64) rest_errors.RestErr {
 	return user.Delete()
 }
 
-func (s *usersService) SearchUser(status string) (users.Users, rest_errors.RestErr) {
-	dao := &users.User{}
-	return dao.FindByStatus(status)
+func (s *usersService) SearchUser(query queries.PsQuery) ([]interface{}, rest_errors.RestErr) {
+	dao := users.User{}
+	users, err := dao.Search(query)
+	publicUsers := []interface{}{}
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		publicUser := user.Marshall(true)
+		publicUsers = append(publicUsers, publicUser)
+	}
+	return publicUsers, nil
+	/*	old:
+		dao := &users.User{}
+		return dao.FindByStatus(status)
+	*/
 }
 
 func (s *usersService) LoginUser(request users.LoginRequest) (interface{}, rest_errors.RestErr) {

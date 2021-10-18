@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Sora8d/heroku_bookstore_users_api/domain/queries"
 	"github.com/Sora8d/heroku_bookstore_users_api/domain/users"
 	"github.com/Sora8d/heroku_bookstore_users_api/services"
 
@@ -109,7 +110,17 @@ func Get(c *gin.Context) {
 }
 
 func SearchUser(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "implement me!")
+	queryObject := queries.PsQuery{}
+	if err := c.ShouldBindJSON(&queryObject); err != nil {
+		querErr := rest_errors.NewBadRequestErr("there was an error building query request")
+		c.JSON(querErr.Status(), querErr)
+		return
+	}
+	users, err := services.UsersService.SearchUser(queryObject)
+	if err != nil {
+		c.JSON(err.Status(), err)
+	}
+	c.JSON(http.StatusOK, users)
 }
 
 func Update(c *gin.Context) {
@@ -175,6 +186,7 @@ func Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 }
 
+/*
 func Search(c *gin.Context) {
 	status := c.Query("status")
 
@@ -185,7 +197,7 @@ func Search(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, users.Marshall((c.GetHeader("X-Public") == "true")))
 }
-
+*/
 func Login(c *gin.Context) {
 	var request users.LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

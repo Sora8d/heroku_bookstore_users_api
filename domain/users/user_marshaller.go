@@ -4,6 +4,7 @@ import "encoding/json"
 
 type PublicUser struct {
 	Id          int64  `json:"user_id"`
+	FirstName   string `json:"first_name"`
 	DateCreated string `json:"datecreated"`
 	Status      string `json:"status"`
 }
@@ -29,6 +30,7 @@ func (user *User) Marshall(isPublic bool) interface{} {
 	if isPublic {
 		return PublicUser{
 			Id:          user.Id,
+			FirstName:   user.FirstName,
 			DateCreated: user.DateCreated,
 			Status:      user.Status,
 		}

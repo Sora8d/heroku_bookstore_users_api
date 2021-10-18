@@ -2,7 +2,7 @@ package date
 
 import "time"
 
-const apiDateLayout = "2006-01-02T15:04:05Z"
+const apiDateLayout = "2006-01-02 15:04:05"
 
 func GetNow() time.Time {
 	return time.Now().UTC()
@@ -10,5 +10,5 @@ func GetNow() time.Time {
 
 func GetNowString() string {
 	date := GetNow()
-	return date.Format(apiDateLayout)
+	return date.Format(apiDateLayout) + " UTC"
 }
