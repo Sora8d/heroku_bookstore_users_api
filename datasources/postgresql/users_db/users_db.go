@@ -45,10 +45,8 @@ postgres://localhost/mydb?user=other&password=secret
 possible postgresql urls
 */
 func init() {
-	datasourceName := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s",
-		config.Config["users_postgres_username"],
-		config.Config["users_postgres_password"],
-		config.Config["users_postgres_schema"])
+	datasourceName := fmt.Sprintf("postgres://%s",
+		config.Config["database"])
 	newConn, err := pgx.Connect(context.Background(), datasourceName)
 	if err != nil {
 		logger.Error("Fatal error initializing db", err)
