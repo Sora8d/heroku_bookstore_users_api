@@ -20,5 +20,7 @@ func init() {
 		"users_postgres_username": os.Getenv("users_postgres_username"),
 		"users_postgres_password": os.Getenv("users_postgres_password"),
 		"users_postgres_schema":   os.Getenv("users_postgres_schema"),
+		"oauth":                   os.Getenv("users_ouath_direction"),
+		"address":                 os.Getenv("address"),
 	}
 }

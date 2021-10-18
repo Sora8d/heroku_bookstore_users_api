@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/Sora8d/bookstore_utils-go/logger"
+	"github.com/Sora8d/heroku_bookstore_users_api/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,5 +14,5 @@ func StartApplication() {
 	mapUrls()
 
 	logger.Info("starting app...")
-	router.Run("localhost:8080")
+	router.Run(config.Config["address"])
 }

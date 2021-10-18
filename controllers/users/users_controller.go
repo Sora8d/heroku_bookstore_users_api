@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Sora8d/heroku_bookstore_users_api/config"
 	"github.com/Sora8d/heroku_bookstore_users_api/domain/queries"
 	"github.com/Sora8d/heroku_bookstore_users_api/domain/users"
 	"github.com/Sora8d/heroku_bookstore_users_api/services"
@@ -24,7 +25,7 @@ const (
 )
 
 func init() {
-	oauth.OauthRestClient.SetClient("http://127.0.0.1:8081")
+	oauth.OauthRestClient.SetClient(config.Config["oauth"])
 }
 
 func getUserId(Paramid string) (int64, rest_errors.RestErr) {
