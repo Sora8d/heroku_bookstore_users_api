@@ -2,6 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Sora8d/bookstore_oauth-go v0.0.0-20211015173400-b1be6388d254 h1:zUF6C/0i2VqlLD/XYL+wSb3fzkD7xRWXts4pF6r9u54=
 github.com/Sora8d/bookstore_oauth-go v0.0.0-20211015173400-b1be6388d254/go.mod h1:dZbPfWPFdq1gF8mIxjTBvApNN/L31T/F1/LGG1OiqT8=
+github.com/Sora8d/bookstore_oauth-go v0.0.0-20211015190810-f536ae72791b h1:iWlGy/NLmE1YLqI+jgJfBcvgt5t+BYtc6JS7q4uABPw=
+github.com/Sora8d/bookstore_oauth-go v0.0.0-20211015190810-f536ae72791b/go.mod h1:dZbPfWPFdq1gF8mIxjTBvApNN/L31T/F1/LGG1OiqT8=
 github.com/Sora8d/bookstore_utils-go v0.0.0-20211015171847-405f893a21d0 h1:JBh616TJc0vlFYC5G/nSVMV3HgBltx9lrz+DRszrRMM=
 github.com/Sora8d/bookstore_utils-go v0.0.0-20211015171847-405f893a21d0/go.mod h1:ymezsYYddY5vO35dxpBJQ89921lM8x99qs900oYZe7k=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
@@ -84,8 +86,6 @@ github.com/jackc/pgx/v4 v4.13.0/go.mod h1:9P4X524sErlaxj0XSGZk7s+LD0eOyu1ZDUrrpz
 github.com/jackc/puddle v0.0.0-20190413234325-e4ced69a3a2b/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
 github.com/jackc/puddle v0.0.0-20190608224051-11cab39313c9/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
 github.com/jackc/puddle v1.1.3/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
-github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
-github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
