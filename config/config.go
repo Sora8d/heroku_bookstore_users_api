@@ -11,7 +11,9 @@ var Config config
 func init() {
 
 	Config = config{
-		"database": os.Getenv("database"),
+		"database": os.Getenv("DATABASE_URL"),
 		"address":  os.Getenv("address"),
+		"port":     os.Getenv("PORT"),
+		"oauth":    os.Getenv("oauth"),
 	}
 }

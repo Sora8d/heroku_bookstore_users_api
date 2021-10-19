@@ -2,7 +2,6 @@ package users_db
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Sora8d/bookstore_utils-go/logger"
 	"github.com/Sora8d/heroku_bookstore_users_api/config"
@@ -45,8 +44,7 @@ postgres://localhost/mydb?user=other&password=secret
 possible postgresql urls
 */
 func init() {
-	datasourceName := fmt.Sprintf("postgres://%s",
-		config.Config["database"])
+	datasourceName := config.Config["database"]
 	newConn, err := pgx.Connect(context.Background(), datasourceName)
 	if err != nil {
 		logger.Error("Fatal error initializing db", err)
